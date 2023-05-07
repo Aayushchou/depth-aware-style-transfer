@@ -49,4 +49,5 @@ https://user-images.githubusercontent.com/26253512/236692306-6645895a-9860-4dc1-
 - [ ] add main.py to orchestrate end-to-end procedure 
 - [ ] improvements to depth recognition
 - [ ] try out more style image examples
+- [ ] add front-end 
 
