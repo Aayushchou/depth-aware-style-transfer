@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imagestyler"
+authors = [
+    {name = "Aayush Choudhury", email = "aayushchou@gmail.com"},
+]
+description = "Package for building a music emotion detection model"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "tensorflow",
+    "tensorflow-hub",
+    "opencv-python",
+    "numpy",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = ["black", "pytest", "pylint"]
+
+[tool.distutils.bdist_wheel]
+universal = true
