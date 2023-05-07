@@ -2,6 +2,8 @@
 
 This code implements depth aware neural style transfer for application to videos. 
 
+Completes locally on my Macbook Pro 2019 without gpu within 15 mins for 1 min video 🙆🏽‍♂️
+
 ## Installation
 
 To install the package, please clone the repository and install via pip: 
