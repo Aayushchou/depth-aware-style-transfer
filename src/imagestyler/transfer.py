@@ -1,11 +1,9 @@
-import os
 import cv2
 from typing import Tuple
 import numpy as np
 import PIL.Image
 import tensorflow as tf
 import tensorflow_hub as hub
-from concurrent.futures import ThreadPoolExecutor
 
 import torch
 
@@ -92,9 +90,6 @@ class StyleTransfer:
 class DepthAwareStyleTransfer:
     def __init__(
         self,
-        content_img: str,
-        style_img: str,
-        style_img_2: str,
         max_dim: int,
         model_type: str = "DPT_Hybrid",
         alpha: float = 0.99,
@@ -127,27 +122,25 @@ class DepthAwareStyleTransfer:
         self.depth_model.to(device)
         self.depth_model.eval()
         self.max_dim = max_dim
-        self.content_img = self.load_img(content_img)
-        self.style_img = self.load_img(style_img)
-        self.style_img_2 = self.load_img(style_img_2)
 
-    def __call__(self) -> PIL.Image.Image:
+    def __call__(self, content_img, style_img, style_img_2) -> PIL.Image.Image:
         """
         Perform the depth-aware style transfer.
 
         Returns:
             PIL.Image.Image: The depth-aware style transferred image.
         """
-        content_pil = self.tensor_to_image(self.content_img)
+        content_img = self.load_img(content_img)
+        style_img = self.load_img(style_img)
+        style_img_2 = self.load_img(style_img_2)
+        content_pil = self.tensor_to_image(content_img)
 
-        stylized_image = self.model(
-            tf.constant(self.content_img), tf.constant(self.style_img)
-        )[0]
+        stylized_image = self.model(tf.constant(content_img), tf.constant(style_img))[0]
         stylized_image = self.tensor_to_image(stylized_image[0])
         stylized_image = stylized_image.resize(content_pil.size, PIL.Image.BILINEAR)
 
         stylized_image2 = self.model(
-            tf.constant(self.content_img), tf.constant(self.style_img_2)
+            tf.constant(content_img), tf.constant(style_img_2)
         )[0]
         stylized_image2 = self.tensor_to_image(stylized_image2[0])
         stylized_image2 = stylized_image2.resize(content_pil.size, PIL.Image.BILINEAR)
@@ -261,33 +254,3 @@ class DepthAwareStyleTransfer:
         blended_pil = PIL.Image.fromarray(np.uint8(blended_np * 255))
 
         return blended_pil
-
-
-def process_image(content_img):
-    creator = DepthAwareStyleTransfer(
-        os.path.join(content_path, content_img), style_img, style_img2, max_dim=512
-    )
-    art = creator()
-    output_path = os.path.join(output_dir, content_img)
-    art.save(output_path)
-    print(f"Saved image {content_img} to {output_path}")
-
-
-if __name__ == "__main__":
-    content_path = "data/input/imgs/"
-    style_img = "data/input/style/neon1.png"
-    style_img2 = "data/input/style/watery.png"
-    output_dir = "data/output/imgs"
-
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    content_images = sorted(os.listdir(content_path))
-
-    # Set the number of worker threads according to your requirements.
-    # You can use os.cpu_count() to get the number of CPU cores in your system.
-    num_workers = os.cpu_count()
-
-    # Using ThreadPoolExecutor for parallel processing
-    with ThreadPoolExecutor(max_workers=num_workers) as executor:
-        executor.map(process_image, content_images)

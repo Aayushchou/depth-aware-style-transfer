@@ -42,9 +42,3 @@ def split_video_to_frames(video_path, output_dir, max_dim):
     # Release the video object and close all windows
     video.release()
     cv2.destroyAllWindows()
-
-
-if __name__ == "__main__":
-    video_file = "data/input/video/1am_trimmed.mp4"
-    output_directory = "data/input/imgs"
-    split_video_to_frames(video_file, output_directory, max_dim=512)

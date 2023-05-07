@@ -24,5 +24,8 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = ["black", "pytest", "pylint"]
 
+[project.scripts]
+style-transfer = "imagestyler.main:orchestrate"
+
 [tool.distutils.bdist_wheel]
 universal = true

@@ -43,13 +43,3 @@ def get_frame_rate(video_path):
     fps = int(video.get(cv2.CAP_PROP_FPS))
     video.release()
     return fps
-
-
-if __name__ == "__main__":
-    image_folder = "data/output/imgs"
-    input_video = "data/input/video/1am_trimmed.mp4"
-    output_video = "data/output/video/1am_blurred_hybrid.mp4"
-    frame_rate = get_frame_rate(input_video)
-    images_to_video(
-        image_folder, output_video, fps=frame_rate, sorted_function=sorting_function
-    )
