@@ -14,6 +14,14 @@ cd image-styler
 pip install -e .
 ```
 
+## Execution
+
+To run for your videos and files, simply run the following command in your terminal (update paths to your files accordingly):
+
+```
+style-transfer -i "data/input/video/1am_trimmed.mp4" -sf "data/input/style/neon1.png" -sb "data/input/style/cyber.png" -o "data/output/test"
+```
+
 ## Procedure
 
 The style transfer is done in the following steps: 
@@ -50,7 +58,7 @@ https://user-images.githubusercontent.com/26253512/236692306-6645895a-9860-4dc1-
 
 ## Task Checklist
 
-- [ ] add main.py to orchestrate end-to-end procedure 
+- [x] add main.py to orchestrate end-to-end procedure 
 - [ ] improvements to depth recognition
 - [ ] try out more style image examples
 - [ ] add front-end 
