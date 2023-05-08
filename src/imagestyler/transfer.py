@@ -7,6 +7,8 @@ import tensorflow_hub as hub
 
 import torch
 
+from imagestyler.utils import load_img, tensor_to_image
+
 
 class StyleTransfer:
     """
@@ -29,9 +31,9 @@ class StyleTransfer:
         self.model = hub.load(
             "https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2"
         )
-        self.max_dim = max_dim
-        self.content_img = self.load_img(content_img)
-        self.style_img = self.load_img(style_img)
+
+        self.content_img = load_img(content_img, max_dim=max_dim)
+        self.style_img = self.load_img(style_img, apply_max_dim=False)
 
     def __call__(self) -> PIL.Image.Image:
         """
@@ -44,47 +46,8 @@ class StyleTransfer:
         stylized_image = self.model(
             tf.constant(self.content_img), tf.constant(self.style_img)
         )[0]
-        stylized_image = self.tensor_to_image(stylized_image[0])
+        stylized_image = tensor_to_image(stylized_image[0])
         return stylized_image
-
-    def tensor_to_image(self, tensor: tf.Tensor) -> PIL.Image.Image:
-        """
-        Converts a TensorFlow tensor to a PIL.Image object.
-
-        Args:
-            tensor (tf.Tensor): The input TensorFlow tensor.
-
-        Returns:
-            PIL.Image.Image: The resulting PIL.Image object.
-        """
-        tensor = tensor * 255
-        tensor = np.array(tensor, dtype=np.uint8)
-        if np.ndim(tensor) > 3:
-            assert tensor.shape[0] == 1
-            tensor = tensor[0]
-        return PIL.Image.fromarray(tensor)
-
-    def load_img(self, path_to_img: str) -> tf.Tensor:
-        """
-        Loads an image from a file and preprocesses it as a TensorFlow tensor.
-
-        Args:
-            path_to_img (str): The file path of the image.
-
-        Returns:
-            tf.Tensor: The preprocessed image as a TensorFlow tensor.
-        """
-        img = tf.io.read_file(path_to_img)
-        img = tf.image.decode_image(img, channels=3)
-        img = tf.image.convert_image_dtype(img, tf.float32)
-
-        shape = tf.cast(tf.shape(img)[:-1], tf.float32)
-        scale = self.max_dim / max(shape)
-        new_shape = tf.cast(shape * scale, tf.int32)
-
-        img = tf.image.resize(img, new_shape)
-        img = img[tf.newaxis, :]
-        return img
 
 
 class DepthAwareStyleTransfer:
@@ -92,9 +55,9 @@ class DepthAwareStyleTransfer:
         self,
         max_dim: int,
         model_type: str = "DPT_Hybrid",
-        alpha: float = 0.99,
+        alpha: float = 0.8,
         blur_kernel_size: Tuple[int, int] = (15, 15),
-        blur_sigma: int = 5,
+        blur_sigma: int = 3,
     ) -> None:
         """
         Initialize the DepthAwareStyleTransfer class.
@@ -130,19 +93,19 @@ class DepthAwareStyleTransfer:
         Returns:
             PIL.Image.Image: The depth-aware style transferred image.
         """
-        content_img = self.load_img(content_img)
-        style_img = self.load_img(style_img)
-        style_img_2 = self.load_img(style_img_2)
-        content_pil = self.tensor_to_image(content_img)
+        content_img = load_img(content_img, max_dim=self.max_dim)
+        style_img = load_img(style_img, max_dim=self.max_dim)
+        style_img_2 = load_img(style_img_2, apply_max_dim=False)
+        content_pil = tensor_to_image(content_img)
 
         stylized_image = self.model(tf.constant(content_img), tf.constant(style_img))[0]
-        stylized_image = self.tensor_to_image(stylized_image[0])
+        stylized_image = tensor_to_image(stylized_image[0])
         stylized_image = stylized_image.resize(content_pil.size, PIL.Image.BILINEAR)
 
         stylized_image2 = self.model(
             tf.constant(content_img), tf.constant(style_img_2)
         )[0]
-        stylized_image2 = self.tensor_to_image(stylized_image2[0])
+        stylized_image2 = tensor_to_image(stylized_image2[0])
         stylized_image2 = stylized_image2.resize(content_pil.size, PIL.Image.BILINEAR)
 
         content_depth = self.estimate_depth(content_pil)
@@ -151,45 +114,6 @@ class DepthAwareStyleTransfer:
             stylized_image, stylized_image2, content_depth
         )
         return depth_aware_image
-
-    def tensor_to_image(self, tensor: tf.Tensor) -> PIL.Image.Image:
-        """
-        Convert a TensorFlow tensor to a PIL.Image.Image object.
-
-        Args:
-            tensor (tf.Tensor): The input tensor.
-
-        Returns:
-            PIL.Image.Image: The PIL image object.
-        """
-        tensor = tensor * 255
-        tensor = np.array(tensor, dtype=np.uint8)
-        if np.ndim(tensor) > 3:
-            assert tensor.shape[0] == 1
-            tensor = tensor[0]
-        return PIL.Image.fromarray(tensor)
-
-    def load_img(self, path_to_img: str) -> tf.Tensor:
-        """
-        Load an image from a file path and preprocess it for the style transfer model.
-
-        Args:
-            path_to_img (str): Path to the image file.
-
-        Returns:
-            tf.Tensor: The preprocessed image tensor.
-        """
-        img = tf.io.read_file(path_to_img)
-        img = tf.image.decode_image(img, channels=3)
-        img = tf.image.convert_image_dtype(img, tf.float32)
-
-        shape = tf.cast(tf.shape(img)[:-1], tf.float32)
-        scale = self.max_dim / max(shape)
-        new_shape = tf.cast(shape * scale, tf.int32)
-
-        img = tf.image.resize(img, new_shape)
-        img = img[tf.newaxis, :]
-        return img
 
     def estimate_depth(self, img: PIL.Image.Image) -> PIL.Image.Image:
         """

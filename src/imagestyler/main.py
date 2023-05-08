@@ -33,7 +33,7 @@ def main(input_video_path, style_image_1, style_image_2, output_path, max_dim=51
     # Step 2: Process images using DepthAwareStyleTransfer
     tqdm.write("Starting style transfer of frames")
 
-    creator = DepthAwareStyleTransfer(max_dim=128)
+    creator = DepthAwareStyleTransfer(max_dim=max_dim)
     content_path = frame_output_dir
     output_dir = os.path.join(output_path, "processed_frames")
 
@@ -82,7 +82,9 @@ def orchestrate():
         "-sb", "--style_img2", help="Path to the background style image."
     )
     parser.add_argument("-o", "--output_path", help="Path to the output directory.")
-    parser.add_argument("-md", "--max_dim", help="Maximum size of the output images")
+    parser.add_argument(
+        "-md", "--max_dim", help="Maximum size of the output images", type=int
+    )
 
     args = parser.parse_args()
     main(

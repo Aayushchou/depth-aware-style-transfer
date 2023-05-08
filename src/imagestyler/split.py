@@ -20,7 +20,7 @@ def split_video_to_frames(video_path, output_dir, max_dim):
         scale_factor = max_dim / max(height, width)
         new_height = int(height * scale_factor)
         new_width = int(width * scale_factor)
-        return cv2.resize(frame, (new_width, new_height))
+        return cv2.resize(frame, (512, 264))
 
     frame_number = 0
     while True:
@@ -42,3 +42,9 @@ def split_video_to_frames(video_path, output_dir, max_dim):
     # Release the video object and close all windows
     video.release()
     cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    split_video_to_frames(
+        "data/input/video/1am_trimmed.mp4", output_dir="data/input/imgs", max_dim=512
+    )
